@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "singly",
+            "type": "shell",
+            "command": "gcc -o ex linked_lists/singly_linked_list.c && ./ex",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }, 
+        {
+            "label": "doubly",
+            "type": "shell",
+            "command": "gcc -o ex linked_lists/doubly_linked_list.c && ./ex",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ]
+}
