@@ -9,6 +9,9 @@ typedef struct list {
 
 void insert_node(int, int, dll **, dll **);
 void print_list(dll **, dll **, int);
+void delete_node(dll **, dll **, int);
+void delete_first(dll **, dll **);
+void delete_last(dll **, dll **);
 
 void insert_node(int val, int position, dll **head, dll **tail)
 {
@@ -99,6 +102,57 @@ void print_list(dll **head, dll **tail, int pole)
     printf("\n");
 }
 
+void delete_node(dll **head, dll **tail, int position)
+{
+    if(!*head && !*tail) {
+        printf("Can't remoave from empty list, returning...\n");
+        return;
+    }
+    
+    if(!position) {
+        delete_first(head, tail);
+    } else if(position == -1) {
+        delete_last(head, tail);
+    } else {
+        dll *temp = *head;
+        int i = 0;
+
+        while(i++ < position - 1) {
+            temp = temp->next;
+            if(!temp) {
+                printf("Out of bounds, returning...\n");
+                return;
+            }
+        }
+
+        if(temp == *head) {
+            delete_first(head, tail);
+        } else if(temp == *tail) {
+            delete_last(head, tail);
+        } else {
+            dll *temp2 = temp->prev, *temp3 = temp->next;
+            temp2->next = temp->next;
+            temp3->prev = temp2;
+        }
+    }
+}
+
+void delete_first(dll **head, dll **tail)
+{
+    dll *temp = (*head)->next;
+    *head = temp;
+    (*head)->next = temp->next;
+    (*head)->prev = NULL;
+}
+
+void delete_last(dll **head, dll **tail)
+{
+    dll *temp = (*tail)->prev;
+    *tail = temp;
+    (*tail)->prev = temp->prev;
+    (*tail)->next = NULL;
+}
+
 // ⇄
 int main(void)
 {
@@ -113,7 +167,26 @@ int main(void)
     insert_node(111, 5, &head, &tail);
 
     print_list(&head, &tail, 1);
+    printf("__________________\n");
+    
+    delete_node(&head, &tail, 0);
+    print_list(&head, &tail, 1);
     print_list(&head, &tail, 0);
+    printf("__________________\n");
 
+    delete_node(&head, &tail, 6);
+    print_list(&head, &tail, 1);
+    print_list(&head, &tail, 0);
+    printf("__________________\n");
+
+    delete_node(&head, &tail, 3);
+    print_list(&head, &tail, 1);
+    print_list(&head, &tail, 0);
+    printf("__________________\n");
+
+    delete_node(&head, &tail, 1);
+    print_list(&head, &tail, 1);
+    print_list(&head, &tail, 0);
+    printf("__________________\n");
 
 }
