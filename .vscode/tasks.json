@@ -14,7 +14,7 @@
         {
             "label": "doubly",
             "type": "shell",
-            "command": "gcc -o ex linked_lists/doubly_linked_list.c && ./ex",
+            "command": "clear && gcc -o ex linked_lists/doubly_linked_list.c && ./ex",
             "group": {
                 "kind": "build",
                 "isDefault": true
