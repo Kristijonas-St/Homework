@@ -8,7 +8,7 @@ typedef struct node {
 } node;
 
 void insert_node(node**, int);
-void print_tree(node**);
+void print_tree(node*, int);
 
 void insert_node(node** root, int value)
 {
@@ -53,55 +53,38 @@ void insert_node(node** root, int value)
     
 }
 
-void print_tree(node** root)
+// not mine, just to check the functionality
+void print_tree(node* root, int space)
 {
-    int height = 0;
-    node* iteration = *root, *l = NULL, *r = NULL;
+    if(root == NULL) return;
 
-    printf("%d\n", iteration->val);
-    if(iteration->left_child != NULL) {
-        l = iteration->left_child;
-    } 
-    if(iteration->right_child != NULL) {
-        r = iteration->right_child;
-    }
-    
-    while(1) {
-        if(l != NULL) {
-            printf("%d", l->val);
-            l = l->left_child;
-        }
+    space += 5;
 
-        printf("\t");
+    print_tree(root->right_child, space);
 
-        if(r != NULL) {
-            printf("  %d", r->val);
-            r = r->right_child;
-        }
+    printf("\n");
+    for(int i = 5; i < space; i++) printf(" ");
+    printf("%d\n", root->val);
 
-        if(l == NULL && r == NULL) {
-            return;
-        }
-        
-        printf("\n");
-    } 
-
-
+    print_tree(root->left_child, space);
 }
+
 
 int main(void)
 {
     node* root = NULL;
+    
     insert_node(&root, 6);
     insert_node(&root, 4);
     insert_node(&root, 3);
     insert_node(&root, 5);
     insert_node(&root, 7);
+    insert_node(&root, 10);
+    insert_node(&root, 11);
     insert_node(&root, 8);
-    insert_node(&root, 9);
+    insert_node(&root, 1);
     insert_node(&root, 2);
-    
+    insert_node(&root, 9);
 
-    print_tree(&root);
-    
+    print_tree(root, 0);
 }
