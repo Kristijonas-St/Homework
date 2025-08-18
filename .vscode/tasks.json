@@ -20,6 +20,16 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        }, 
+        {
+            "label": "binary_tree",
+            "type": "shell",
+            "command": "clear && gcc -o ex binary_trees/binary_tree.c && ./ex",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }
