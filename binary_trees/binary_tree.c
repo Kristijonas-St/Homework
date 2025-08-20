@@ -8,6 +8,8 @@ typedef struct node {
 } node;
 
 void insert_node(node**, int);
+node* search_node(node**, int);
+void delete_node(node**, int);
 void print_tree(node*, int);
 
 void insert_node(node** root, int value)
@@ -53,6 +55,27 @@ void insert_node(node** root, int value)
     
 }
 
+node* search_node(node** root, int val)
+{
+    node* temp = *root;
+
+    while(temp != NULL) {
+        if(temp->val == val) {
+            return temp;
+        } else {
+            temp = (val < temp->val) ? temp->left_child : temp->right_child;
+        }
+    }
+    return NULL;
+}
+
+void delete_node(node** root, int value)
+{
+    
+}
+
+
+
 // not mine, just to check the functionality
 void print_tree(node* root, int space)
 {
@@ -73,7 +96,8 @@ void print_tree(node* root, int space)
 int main(void)
 {
     node* root = NULL;
-    
+    node* search_result;
+
     insert_node(&root, 6);
     insert_node(&root, 4);
     insert_node(&root, 3);
@@ -85,6 +109,16 @@ int main(void)
     insert_node(&root, 1);
     insert_node(&root, 2);
     insert_node(&root, 9);
+    insert_node(&root, 20);
+
+    // search example
+    int value = 11;
+    search_result = search_node(&root, value);
+    if(search_result == NULL) {
+        printf("%d node doesn't exist!!!\n", value);
+    } else {
+        printf("FOUND %d\n", value);
+    }
 
     print_tree(root, 0);
 }
