@@ -11,6 +11,7 @@ void insert_node(node**, int);
 node* search_node(node**, int);
 void delete_node(node**, int);
 void delete_leaf(node**, int);
+void delete_one_child(node**, int);
 
 void print_tree(node*, int);
 
@@ -94,9 +95,9 @@ void delete_node(node** root, int val)
     if(to_delete->left_child == NULL && to_delete->right_child == NULL) {
         delete_leaf(&parent, val);
     } else if(to_delete->left_child != NULL && to_delete->right_child != NULL) {
-        printf("Goind to delete a node with TWO children\n");
+        printf("Going to delete a node with TWO children\n");
     } else {
-        printf("Going to delete a node with ONE child\n");
+        delete_one_child(&parent, val);
     }
 }
 
@@ -113,6 +114,21 @@ void delete_leaf(node** temp, int val)
         (*temp)->left_child = NULL;
     }
     free(leaf_to_delete);  
+}
+
+void delete_one_child(node** temp, int val)
+{
+    printf("Going to delete a node with ONE child\n");
+
+    node* to_delete = (val > (*temp)->val) ? (*temp)->right_child : (*temp)->left_child;
+    node* new_child = (to_delete->left_child != NULL) ? to_delete->left_child : to_delete->right_child;
+
+    if((*temp)->left_child == to_delete) {
+        (*temp)->left_child = new_child;
+    } else {
+        (*temp)->right_child = new_child;
+    }
+    free(to_delete);
 }
 
 // not mine, just to check the functionality
@@ -136,21 +152,37 @@ int main(void)
     node* root = NULL;
     node* search_result, *temp;
 
-    insert_node(&root, 6);
-    insert_node(&root, 4);
-    insert_node(&root, 3);
-    insert_node(&root, 5);
-    insert_node(&root, 7);
-    insert_node(&root, 8);
+    insert_node(&root, 20);
+    insert_node(&root, 42);
+    insert_node(&root, 31);
+    insert_node(&root, 12);
+    insert_node(&root, 27);
+    insert_node(&root, 40);
+    insert_node(&root, 16);
+    insert_node(&root, 18);
+    insert_node(&root, 19);
+
 
     print_tree(root, 0);
     printf("\n\n");
 
-    delete_node(&root, 8);
-    print_tree(root, 0);
+    delete_node(&root, 16);
+    print_tree(root, 0);    
     printf("\n\n");
 
-    delete_node(&root, 7);
+    delete_node(&root, 42);
+    print_tree(root, 0);    
+    printf("\n\n");
+
+    delete_node(&root, 18);
+    print_tree(root, 0);    
+    printf("\n\n");
+
+    delete_node(&root, 12);
+    print_tree(root, 0);    
+    printf("\n\n");
+
+    delete_node(&root, 19);
     print_tree(root, 0);    
     printf("\n\n");
 
