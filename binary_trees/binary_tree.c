@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct node {
     struct node* left_child;
@@ -22,7 +23,7 @@ bool root_is_parent(node**, int);
 
 void insert_node(node** root, int val)
 {
-    printf("Insert %d\n", val);
+    // printf("Insert %d\n", val);
         
     // Tree is empty
     if(!*root) {
@@ -35,7 +36,7 @@ void insert_node(node** root, int val)
 
     // Prevent duplication
     if(already_exists(val, root)) {
-        printf("This node ALREADY exists, exiting...\n");
+        // printf("This node ALREADY exists, exiting...\n");
         return;
     }
 
@@ -91,17 +92,17 @@ node* search_node(node** root, int val)
         
     }
 
-    printf("No luck finding %d...\n", val);
+    // printf("No luck finding %d...\n", val);
     return NULL;
 }
 
 void delete_node(node** root, int val)
 {    
-    printf("Delete %d\n", val);
+    // printf("Delete %d\n", val);
 
     // Do not attempt to delete a node that doesn't exist
     if(!already_exists(val, root) && val != (*root)->val) {
-        printf("Node %d doesn't exist, returning...\n", val);
+        // printf("Node %d doesn't exist, returning...\n", val);
         return;
     } 
 
@@ -125,7 +126,7 @@ void delete_node(node** root, int val)
 
 void delete_one_child(node** temp, int val)
 {
-    printf("Going to delete a node with ONE child\n");
+    // printf("Going to delete a node with ONE child\n");
     
     node* to_delete = (val > (*temp)->val) ? (*temp)->right_child : (*temp)->left_child;
     node* new_child = (to_delete->left_child != NULL) ? to_delete->left_child : to_delete->right_child;
@@ -141,7 +142,7 @@ void delete_one_child(node** temp, int val)
 
 void delete_two_children(node** temp, int val)
 {
-    printf("Going to delete a node with TWO children: %d\n", val);
+    // printf("Going to delete a node with TWO children: %d\n", val);
 
     node* node_to_be_deleted = (val > (*temp)->val) ? (*temp)->right_child : (*temp)->left_child;
     node* bigger_smallest = node_to_be_deleted->right_child;
@@ -324,90 +325,29 @@ void print_tree(node* root, int space)
 
 int main(void)
 {
+    srand(time(NULL));
+
     node* root = NULL;
-    node* search_result, *temp;
 
-    insert_node(&root, 70);
-    insert_node(&root, 40);
-    insert_node(&root, 60);
-    
-    printf("Initial tree\n");
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");     
-    } else printf("Tree is empty\n");
+    clock_t start = clock();
+    int num_of_ops = 1000000;
+    for(int i = 0; i < num_of_ops; i++) {
+        insert_node(&root, (rand() % 1200000) + 1);
+    }
+    clock_t end = clock();
 
-    delete_node(&root, 70);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
+    double seconds = (double)(end - start) / CLOCKS_PER_SEC;
+    double ops_per_sec = (double)num_of_ops / seconds;
 
-    
-    insert_node(&root, 10);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
+    printf("Total time: %.8f sec\n", seconds);
+    printf("Ops per second: %.2f\n", ops_per_sec);
 
-    insert_node(&root, 5);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");    
 
-    insert_node(&root, 20);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    insert_node(&root, 100);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    insert_node(&root, 80);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    insert_node(&root, 50);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    insert_node(&root, 45);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    insert_node(&root, 80);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    delete_node(&root, 55);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    delete_node(&root, 40);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
-
-    delete_node(&root, 60);
-    if(root != NULL) {
-        print_tree(root, 0);
-        printf("\n__________________________\n");    
-    } else printf("Tree is empty\n");
+    /* For printing a SMALL tree
+        if(root != NULL) {
+            print_tree(root, 0);
+            printf("\n__________________________\n");    
+        } else printf("Tree is empty\n");
+    */
 }
 
