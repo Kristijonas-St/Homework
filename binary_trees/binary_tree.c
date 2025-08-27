@@ -3,15 +3,21 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define BENCHMARKING 0
+
 typedef struct node {
     struct node* left_child;
     struct node* right_child;
     int val;   
 } node;
 
-void insert_node(node**, int);
+// CRUD
+void Create(node**, int);
+node* Read(node**, int);
+void Update(node**, int, int);
+void Delete(node**, int);
+
 node* search_node(node**, int);
-void delete_node(node**, int);
 void delete_leaf(node**, int);
 void delete_one_child(node**, int);
 void delete_two_children(node **, int);
@@ -21,10 +27,11 @@ void print_tree(node*, int);
 bool already_exists(int, node**);
 bool root_is_parent(node**, int);
 
-void insert_node(node** root, int val)
+void Create(node** root, int val)
 {
-    // printf("Insert %d\n", val);
-        
+    if(!BENCHMARKING) 
+        printf("Insert %d\n", val);
+
     // Tree is empty
     if(!*root) {
         *root = (node*)malloc(sizeof(node));
@@ -36,12 +43,15 @@ void insert_node(node** root, int val)
 
     // Prevent duplication
     if(already_exists(val, root)) {
-        // printf("This node ALREADY exists, exiting...\n");
+        if(!BENCHMARKING)
+            printf("This node ALREADY exists, exiting...\n");
         return;
     }
 
     node* iteration = *root;
     node* new_node;
+    
+    int i = 0;
     while(1) {
         // Go left
         if(val < iteration->val) {
@@ -54,14 +64,14 @@ void insert_node(node** root, int val)
             } else {
                 iteration = iteration->left_child;
             }
-
+            
         } 
         // Go right
         else {
             if(iteration->right_child == NULL) {
                 new_node = (node*)malloc(sizeof(node));
                 iteration->right_child = new_node;
-                new_node->val = val;            
+                new_node->val = val;
                 return;
             } else {
                 iteration = iteration->right_child;
@@ -71,6 +81,88 @@ void insert_node(node** root, int val)
     }
 }
 
+node* Read(node** root, int val)
+{
+    if(val == (*root)->val) {
+        return *root;
+    }
+    
+    node* result = search_node(root, val);
+    if(result) {
+        node* l, *r;
+        if(result->left_child != NULL) {
+            l = result->left_child;
+            if(l->val == val) {
+                return l;
+            }
+        }
+
+        if(result->right_child != NULL) {
+            r = result->right_child;
+            if(r->val == val) {
+                return r;
+            }
+        }
+    } 
+    return NULL;
+}
+
+void Update(node** root, int original, int replacement)
+{
+    if(!already_exists(original, root)) {
+        if(!BENCHMARKING) 
+            printf("Cannot Update something that isn't there...\n");
+        return;
+    }
+
+    if(already_exists(replacement, root)) {
+        if(!BENCHMARKING) 
+            printf("%d is already in the tree...\n", replacement);
+        return;
+    }
+
+    if(!BENCHMARKING)
+        printf("Update %d to %d\n", original, replacement);
+
+    Create(root, replacement);
+    Delete(root, original);
+}
+
+void Delete(node** root, int val)
+{    
+    if(!BENCHMARKING) 
+        printf("Delete %d\n", val);
+
+    // Do not attempt to delete a node that doesn't exist
+    if(!already_exists(val, root) && val != (*root)->val) {
+        if(!BENCHMARKING) 
+            printf("Node %d doesn't exist, returning...\n", val);
+        return;
+    } 
+
+    // Need to delete the root
+    if(val == (*root)->val) {
+        delete_root(root, val);
+        return;
+    }
+
+    node* parent = search_node(root, val);
+    node* to_delete = (val > parent->val) ? parent->right_child : parent->left_child;
+    
+    if(to_delete->left_child == NULL && to_delete->right_child == NULL) {
+        delete_leaf(&parent, val);
+    } else if(to_delete->left_child != NULL && to_delete->right_child != NULL) {
+        node *r = to_delete->right_child;
+        node *l = to_delete->left_child;
+        delete_two_children(&parent, val);
+    } else {
+        delete_one_child(&parent, val);
+    }
+
+}
+
+
+// Helper Functions
 node* search_node(node** root, int val)
 {   
     
@@ -94,34 +186,6 @@ node* search_node(node** root, int val)
 
     // printf("No luck finding %d...\n", val);
     return NULL;
-}
-
-void delete_node(node** root, int val)
-{    
-    // printf("Delete %d\n", val);
-
-    // Do not attempt to delete a node that doesn't exist
-    if(!already_exists(val, root) && val != (*root)->val) {
-        // printf("Node %d doesn't exist, returning...\n", val);
-        return;
-    } 
-
-    // Need to delete the root
-    if(val == (*root)->val) {
-        delete_root(root, val);
-        return;
-    }
-
-    node* parent = search_node(root, val);
-    node* to_delete = (val > parent->val) ? parent->right_child : parent->left_child;
-    
-    if(to_delete->left_child == NULL && to_delete->right_child == NULL) {
-        delete_leaf(&parent, val);
-    } else if(to_delete->left_child != NULL && to_delete->right_child != NULL) {
-        delete_two_children(&parent, val);
-    } else {
-        delete_one_child(&parent, val);
-    }
 }
 
 void delete_one_child(node** temp, int val)
@@ -157,11 +221,18 @@ void delete_two_children(node** temp, int val)
     bigger_smallest->val = val;
 
     // search for new leaf and delete it
-    node* parent = search_node(&(node_to_be_deleted->right_child), val);
-    if(parent->val == val) {
-        parent = node_to_be_deleted;
+    node* new_leaf = node_to_be_deleted->right_child;
+    if(new_leaf->val == val) {
+        // If accessing right_child breaks comparison
+        delete_leaf(&node_to_be_deleted, val);
+    } else {
+        // Bigger would normally be found on the right subtree
+        node* parent = search_node(&(node_to_be_deleted->right_child), val);
+        if(parent->val == val) {
+            parent = node_to_be_deleted;
+        }
+        delete_leaf(&parent, val);
     }
-    delete_leaf(&parent, val);
 
 }
 
@@ -325,29 +396,102 @@ void print_tree(node* root, int space)
 
 int main(void)
 {
-    srand(time(NULL));
-
     node* root = NULL;
+    node* search_result, *temp;
 
-    clock_t start = clock();
-    int num_of_ops = 1000000;
-    for(int i = 0; i < num_of_ops; i++) {
-        insert_node(&root, (rand() % 1200000) + 1);
+    if(BENCHMARKING) {
+        clock_t start = clock();
+        int num_of_ops = 1000000;
+        for(int i = 0; i < num_of_ops; i++) {
+            Create(&root, (rand() % 1200000) + 1);
+        }
+        clock_t end = clock();
+
+        double seconds = (double)(end - start) / CLOCKS_PER_SEC;
+        double ops_per_sec = (double)num_of_ops / seconds;
+
+        printf("Total time: %.8f sec\n", seconds);
+        printf("Ops per second: %.2f\n", ops_per_sec);
+
+        return 0;
     }
-    clock_t end = clock();
-
-    double seconds = (double)(end - start) / CLOCKS_PER_SEC;
-    double ops_per_sec = (double)num_of_ops / seconds;
-
-    printf("Total time: %.8f sec\n", seconds);
-    printf("Ops per second: %.2f\n", ops_per_sec);
 
 
-    /* For printing a SMALL tree
-        if(root != NULL) {
-            print_tree(root, 0);
-            printf("\n__________________________\n");    
-        } else printf("Tree is empty\n");
-    */
+    Create(&root, 70);
+    Create(&root, 40);
+    Create(&root, 60);
+    
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");     
+    } 
+
+    Delete(&root, 70);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Create(&root, 10);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Create(&root, 5);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    }     
+
+    Create(&root, 20);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Create(&root, 100);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Create(&root, 80);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Update(&root, 20, 21);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    }     
+
+    Update(&root, 60, 61);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Update(&root, 10, 11);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    Update(&root, 100, 101);
+    if(root) {
+        print_tree(root, 0);
+        printf("\n__________________________\n");    
+    } 
+
+    node* look_for = Read(&root, 80);
+    if(look_for) {
+        printf("Node is found: %d\n", look_for->val);
+    } else {
+        printf("Didn't find such Node\n");
+    }
 }
+
 
