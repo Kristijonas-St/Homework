@@ -2,26 +2,32 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define BENCHMARKING 0
+
 typedef struct list {
     int val;
     struct list* next;
     struct list* prev;
 } dll;
 
-void insert_node(int, int, dll **, dll **);
+// CRUD
+void Create(dll**, dll**, int, int);
+dll* Read(dll**, dll**, int, int);
+void Update(dll**, dll**, int, int);
+void Delete(dll**, dll**, int);
+
 void insert_first(dll **, dll **, dll **);
 void insert_last(dll **, dll **, dll **);
-void delete_node(dll **, dll **, int);
 void delete_first(dll **, dll **);
 void delete_last(dll **, dll **);
 void print_list(dll **, dll **, int);
 
-void insert_node(int val, int position, dll **head, dll **tail)
+void Create(dll** head, dll** tail, int val, int position)
 {
-
     dll *node = (dll*)malloc(sizeof(dll));
     node->val = val;
     
+    // Linked List is empty
     if(!*head && !*tail) {
         node->next = NULL;
         node->prev = NULL;
@@ -29,6 +35,7 @@ void insert_node(int val, int position, dll **head, dll **tail)
         return;
     } 
 
+    // 0 implies First position
     if(!position) {
         insert_first(head, tail, &node);
         return;
@@ -36,21 +43,25 @@ void insert_node(int val, int position, dll **head, dll **tail)
         dll *temp;
         int i = 0;
 
+        // -1 implies Last position
         if(position == -1) {           
             insert_last(head, tail, &node);
             return;
-        }
+        } 
 
         temp = *head;
-        while(i++ < position - 1) {
+        while(i++ != position) {
             temp = temp->next;
+
+            // Position exceeds the limit
             if(!temp) {
-                printf("Out of bounds, exiting...\n");
                 free(node);
                 return;
             }
+
         }
 
+        // Iterated to the last
         if(temp == *tail) {
             insert_last(head, tail, &node);
             return;
@@ -59,32 +70,55 @@ void insert_node(int val, int position, dll **head, dll **tail)
             return;
         }
 
-        dll *temp2 = temp->next;        
-        node->next = temp2;
-        temp2->prev = node;
+        // Reposition accordingly
+        dll* old_prev = temp->prev;
+        dll* old_node = temp;
 
-        temp->next = node;
-        node->prev = temp;
+        old_prev->next = node;
+        node->prev = old_prev;
+
+        temp->prev = node;
+        node->next = temp;
     }
 }
 
-void insert_first(dll **head, dll **tail, dll **node)
+dll* Read(dll** head, dll **tail, int position, int pole)
 {
-    (*head)->prev = *node;
-    (*node)->next = *head;
-    *head = *node;
-    (*node)->prev = NULL;
+    if(position == -1) {
+        return *tail;
+    } else if(position == 0) {
+        return *head;
+    }
+    
+    int i = 0;
+    dll* temp = (pole) ? *head : *tail;
+
+    // Search from tail just for fun
+    while(i++ != position) {
+        temp = (pole) ? temp->next : temp->prev;
+        if(!temp) {
+            return NULL;
+        }
+    }
+
+    return temp;
 }
 
-void insert_last(dll **head, dll **tail, dll **node)
+void Update(dll** head, dll** tail, int position, int replacement)
 {
-    (*tail)->next = *node;
-    (*node)->prev = *tail;
-    (*node)->next = NULL;
-    *tail = *node;
+    if(!BENCHMARKING)
+        printf("Replace value at %d position with value %d\n", position, replacement);
+    
+    dll* to_replace = Read(head, tail, position, 1);
+    if(to_replace) {
+        to_replace->val = replacement;
+    } else {
+        if(!BENCHMARKING)
+            printf("position %d doesn't exist\n", position);
+    }
 }
 
-void delete_node(dll **head, dll **tail, int position)
+void Delete(dll** head, dll** tail, int position)
 {
     if(!*head && !*tail) {
         printf("Can't remoave from empty list, returning...\n");
@@ -117,6 +151,23 @@ void delete_node(dll **head, dll **tail, int position)
             temp3->prev = temp2;
         }
     }
+}
+
+// Helper Functions
+void insert_first(dll **head, dll **tail, dll **node)
+{
+    (*head)->prev = *node;
+    (*node)->next = *head;
+    *head = *node;
+    (*node)->prev = NULL;
+}
+
+void insert_last(dll **head, dll **tail, dll **node)
+{
+    (*tail)->next = *node;
+    (*node)->prev = *tail;
+    (*node)->next = NULL;
+    *tail = *node;
 }
 
 void delete_first(dll **head, dll **tail)
@@ -170,21 +221,66 @@ void print_list(dll **head, dll **tail, int pole)
 int main(void)
 {
     dll *head = NULL, *tail = NULL;
-    double time_used = 0;
     
-    clock_t start = clock();
-    long num_of_ops = 1000000;
+    if(BENCHMARKING) {
+        double time_used = 0;
+        
+        clock_t start = clock();
+        long num_of_ops = 1000000;
 
-    for (int i = 0; i < num_of_ops; i++) {
-        insert_node(i, -1, &head, &tail);
+        for (int i = 0; i < num_of_ops; i++) {
+            Create(&head, &tail, i, -1);
+        }
+        clock_t end = clock();
+
+        double seconds = (double)(end - start) / CLOCKS_PER_SEC;
+        double ops_per_sec = (double)num_of_ops / seconds;
+
+        printf("Total time: %.8f sec\n", seconds);
+        printf("Ops per second: %.2f\n", ops_per_sec);
+
+        return 0;
     }
-    clock_t end = clock();
+    
+    // Indicing works like in arrays
+    Create(&head, &tail, 3, 0);
+    Create(&head, &tail, 1, 0);
+    Create(&head, &tail, 4, -1);
+    Create(&head, &tail, 77, 1);
+    Create(&head, &tail, 78, 2);
+    Create(&head, &tail, 79, 3);
+    Create(&head, &tail, 76, 1);
+    Create(&head, &tail, 80, 5);
 
-    double seconds = (double)(end - start) / CLOCKS_PER_SEC;
-    double ops_per_sec = (double)num_of_ops / seconds;
+    print_list(&head, &tail, 1);
+    printf("____________________________________\n");
 
-    printf("Total time: %.8f sec\n", seconds);
-    printf("Ops per second: %.2f\n", ops_per_sec);
+    int position, pole;
+    dll* read_res;
 
-    return 0;
+    position = 4, pole = 1;
+    read_res = Read(&head, &tail, position, pole);
+    if(read_res) 
+        printf("Pole: %d. At position %d, value is %d\n", pole, position, read_res->val);
+    else printf("Couldn't read from %d position...\n", position);
+
+    position = 5, pole = 0;
+    read_res = Read(&head, &tail, position, 0);
+    if(read_res) 
+        printf("Pole: %d. At position %d, value is %d\n", pole, position, read_res->val);
+    else printf("Couldn't read from %d position...\n", position);
+
+    print_list(&head, &tail, 1);
+    printf("____________________________________\n"); 
+
+    Update(&head, &tail, 0, 75);
+    Delete(&head, &tail, 7);
+    Delete(&head, &tail, -1);
+    Update(&head, &tail, 5, 81);
+
+
+    print_list(&head, &tail, 1);
+    printf("____________________________________\n"); 
+
+
 }
