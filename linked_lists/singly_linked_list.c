@@ -1,167 +1,215 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#define BENCHMARKING 0
 
 typedef struct ll {
     int val;
     struct ll *next;
 } ll;
 
-void insert_node(int, int, ll**, ll**);
-void print_list(ll*);
-void print_head_tail(ll*, ll*);
-ll *search_for_value(ll **, ll**, int);
-void delete(int, ll **, ll **);
-void replace(int, int, ll **, ll **);
+void Create(ll**, int, int);
+ll* Read(ll**, int);
+void Update(ll**, int, int);
+void Delete(ll**, int);
 
-void insert_node(int val, int position, ll **head, ll **tail)
+void Create(ll** head, int position, int value)
 {
-    ll *node = (ll*)malloc(sizeof(ll));
-    node->val = val;
-
-    // Linked List is empty
-    if(!*tail && !*head) {
-        node->next = NULL;
-        *head = *tail = node;
+    ll* new_node = (ll*)malloc(sizeof(ll));
+    if(head == NULL) {
+        new_node->val = value;
+        new_node->next = NULL;
+        *head = new_node;
         return;
     }
 
-    // add first
     if(!position) {
-        node->next = *head;
-        *head = node;
-    } else {
-        ll* temp = *head;
-        int i = 0;
-        
-        if(position == -1) {
-            // add last
-            (*tail)->next = node;
-            node->next = NULL;
-            *tail = node;
-        } else {
-            ll *temp = *head;
-            int i = 0;
-
-            while(i++ < position - 1) {
-                temp = temp->next;
-                if(!temp) {
-                    printf("--- %d is out of bounds, NO BUENO\n", position);
-                    free(node);
-                    return;
-                }
-            }
-            node->next = temp->next;
-            temp->next = node;
-        }
-    }
-}
-
-void delete(int val, ll **head, ll **tail)
-{
-    ll *rmv, *temp = *head;
-
-    if(!*head) {
-        printf("Linked List is empty, exiting...\n");
+        new_node->val = value;
+        new_node->next = *head;
+        *head = new_node;
         return;
-    } else {
-        rmv = search_for_value(head, tail, val);
-        if(!rmv) {
-            printf("Such node doesn't exist, exiting...\n");
+    }
+
+    int i = 0;
+    ll* ite = *head;
+    while(i++ != position - 1) {        
+        ite = ite->next;
+        if(!ite) { 
+            free(new_node);
+            new_node = NULL;
+            if(!BENCHMARKING)
+                printf("Position %d is out of bounds, returning...\n", position);
             return;
-        } else {
-            if(rmv == *head) {
-                // remove first
-                *head = rmv->next;
-            } else {
-                while(temp->next != rmv) {
-                    temp = temp->next;
-                }
-
-                temp->next = rmv->next;
-                if(rmv == *tail) {
-                    // remove last
-                    *tail = temp;
-                }
-                free(rmv);
-            }   
         }
     }
-}
 
-ll *search_for_value(ll **head, ll **tail, int val)
-{
-    ll *temp = *head;
-
-    while(temp != (*tail)->next) {
-        if(temp->val == val) {
-            //printf("Found what you were looking for\n");
-            return temp;
-        }
-        temp = temp->next;
-    }
-
-    printf("%d isn't in the linked list, exiting...\n", val);
-    return NULL;
-}
-
-void print_list(ll *head)
-{
-    ll* node = head;
-    
-    printf("\n");
-    if(!node) {
-        printf("linked list is EMPTY\n");
+    // Insert Last
+    if(ite->next == NULL) {
+        new_node->val = value;
+        ite->next = new_node;
+        new_node->next = NULL;
         return;
     }
 
-    while(node != NULL) {
-        printf("%d", node->val);
-        if(node->next != NULL) {
+    // Insert other position
+    new_node->val = value;
+    new_node->next = ite->next;
+    ite->next = new_node;
+}
+
+ll* Read(ll** head, int position)
+{
+    if(*head == NULL) {
+        if(!BENCHMARKING)        
+            printf("Cannot iterate through empty list, returning NULL...\n");
+        return NULL;
+    }
+
+    ll* ite = *head;
+    int i = 0;
+    while(i++ < position) {
+        ite = ite->next;
+        if(!ite) {
+            return NULL;
+        }
+    }
+    return ite;
+
+}
+
+void Update(ll** head, int position, int value) {
+    if(*head == NULL) {
+        printf("Cannot update an empty list, returning...\n");
+        return;
+    }
+    
+    ll* to_update = Read(head, position);
+
+    if(to_update) {
+        to_update->val = value;
+        return;
+    }
+
+    printf("Pos %d invalid\n", position);
+}
+
+void Delete(ll** head, int position) {
+    if(*head == NULL) {
+        if(!BENCHMARKING)
+            printf("Cannot delete an empty list, returning...\n");
+        return;
+    }
+
+    // Delete First
+    if(!position) {
+        ll* old_head = *head;
+        ll* new_head = (*head)->next;
+
+        free(old_head);
+        old_head = NULL;
+
+        *head = new_head;
+        return;
+    }
+
+    ll* ite = *head;
+    int i = 0;
+    while(i++ != position - 1) {
+        ite = ite->next;
+        if(!ite) {
+            if(!BENCHMARKING)
+                printf("Position %d is out of bounds, returning...\n", position);
+            return;
+        }
+    }
+
+    // Delete Last
+    if(ite->next == NULL) {
+        ll* last = Read(head, position - 2);
+        last->next = NULL;
+        free(ite);
+        ite = NULL;
+        return;
+    }
+
+    // Delete other position
+    ll* temp1 = ite->next;
+    ll* temp2 = temp1->next;
+
+    ite->next = temp2;
+    free(temp1);
+    temp1 = NULL;
+}
+
+void print_list(ll* head)
+{
+    ll* ite = head;
+    while(ite) {
+        printf("%d", ite->val);
+        if(ite->next != NULL) {
             printf(" -> ");
         }
-        node = node->next;
+        ite = ite->next;
     }
-    printf("\n\n");
-}
-
-void print_head_tail(ll* head, ll *tail) 
-{
-    printf("HEAD: %d  TAIL: %d\n", head->val, tail->val);
-}
-
-void replace(int primary, int result, ll **head, ll **tail)
-{
-    ll *rep = search_for_value(head, tail, primary);
-    if(!rep) {
-        printf("%d doesn't exist, exiting...\n", primary);
-        return;
-    } else {
-        rep->val = result;
-    }
+    printf("\n");
 }
 
 int main(void)
 {
-    ll *head = NULL, *tail = NULL;
+    ll *head = NULL;
 
-    insert_node(5, 0, &head, &tail);
-    insert_node(4, 0, &head, &tail);
-    insert_node(3, 0, &head, &tail);
-    insert_node(2, 0, &head, &tail);
-    insert_node(1, 0, &head, &tail);
-    insert_node(6, -1, &head, &tail);
+    if(BENCHMARKING) {
+        double time_used = 0;
+        
+        clock_t start = clock();
+        long num_of_ops = 1000000;
+        
+        for (int i = 0; i < num_of_ops; i++) {
+            Create(&head, 0, i);
+        }
+        clock_t end = clock();
 
+        double seconds = (double)(end - start) / CLOCKS_PER_SEC;
+        double ops_per_sec = (double)num_of_ops / seconds;
 
-    printf("Original List\n");
+        printf("Total time: %.8f sec\n", seconds);
+        printf("Ops per second: %.2f\n", ops_per_sec);
+
+        return 0;   
+    }
+
+    ll* to_read = NULL;
+    int position;
+
+    Create(&head, 0, 45);
+    Create(&head, 0, 18);
+    Create(&head, 0, 26);
+    Create(&head, 3, 72);
+    Create(&head, 1, 72);
+    Create(&head, 2, 77);
+    Create(&head, 2, 100);
+
+    print_list(head);
+    
+    position = 4;
+    to_read = Read(&head, position);
+    if(to_read)
+        printf("Pos %d: %d\n", position, to_read->val);
+    else 
+        printf("Read for pos %d FAILED\n", position);
+
+    Update(&head, 1, 27);
+    Update(&head, 2, 101);
     print_list(head);
 
-    delete(2, &head, &tail);
-    replace(5, 55, &head, &tail);
-    insert_node(22, 1, &head, &tail);
-    insert_node(100, 100, &head, &tail);
-
-    printf("\n\nAfterwards\n");
+    Delete(&head, 7);
     print_list(head);
 
-    return 0;
+    Delete(&head, 1);
+    print_list(head);
+
+    Delete(&head, 2);
+    print_list(head);  
+
 }
